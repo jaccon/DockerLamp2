@@ -1,0 +1,51 @@
+version: "2"
+
+services:
+  webserver:
+    build: 
+      context: ./bin/webserver
+    container_name: 'docker-lamp2-jc'
+    network_mode: "bridge"
+    dns: 8.8.8.8
+    restart: 'always'
+    ports:
+      - "80:80"
+      - "443:443"
+    links: 
+      - mysql
+    volumes: 
+      - ${PWD}/www}:/var/www/html
+      - ${PWD}/config/php/php.ini}:/usr/local/etc/php/php.ini
+      - ${PWD}/config/vhosts}:/etc/apache2/sites-enabled
+      - ${PWD}/logs/apache2}:/var/log/apache2
+  mysql:
+    build: ./bin/mysql
+    container_name: 'png-mysql'
+    restart: 'always'
+    ports:
+      - "3306:3306"
+    volumes: 
+      - ${PWD}/data/mysql}:/var/lib/mysql
+      - ${PWD}/logs/mysql}:/var/log/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: @12345678
+      MYSQL_DATABASE: db1
+      MYSQL_USER: db1
+      MYSQL_PASSWORD: @12345678
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: 'png-phpmyadmin'
+    links:
+      - mysql
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+    ports:
+      - '8080:80'
+    volumes: 
+      - /sessions
+  redis:
+    container_name: 'png-redis'
+    image: redis:latest
+    ports:
+      - "6379:6379"
